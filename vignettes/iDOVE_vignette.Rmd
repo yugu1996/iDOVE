@@ -1,0 +1,351 @@
+---
+title: "iDOVE - $\\text{\\underline{D}}$urability $\\text{\\underline{O}}$f $\\text{\\underline{V}}$accine $\\text{\\underline{E}}$fficacy Against SARS-CoV-2 $\\text{\\underline{I}}$nfection"
+author: "Yu Gu, Shannon T. Holloway, and Dan-Yu Lin"
+date: June 17, 2021
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{iDOVE-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+opt <- options()
+options(continue="  ", width=70, prompt=" ")
+on.exit(options(opt))
+library(iDOVE, quietly=TRUE)
+```
+
+## Introduction
+
+iDOVE is an R package for assessing potentially time-varying vaccine efficacy (VE) 
+against SARS-CoV-2 infection under staggered enrollment and time-varying community transmission, 
+allowing crossover of placebo volunteers to the vaccine arm. 
+The infection time can be either interval- or right-censored, 
+the latter being a special case of the former with very frequent monitoring. 
+iDOVE implements both the method for interval-censored data proposed in Lin et al. (2021)
+and the standard Cox regression method for right-censored data. 
+The iDOVE function takes as input a rectangular data set with the following information:
+
+\begin{itemize}
+\item \textbf{Entry time}: The time when the participant enters the trial.
+
+\item \textbf{Left interval time}: The last examination time when the test is negative.
+  
+\item \textbf{Right interval time}: The first examination time when the test is positive.
+  
+\item \textbf{Vaccination time}: The time when vaccination takes place,
+with an arbitrary value that is greater than the last examination time 
+(e.g., the end time of the clinical trial) if the participant is not vaccinated
+during the trial.
+  
+\item \textbf{Covariates}: Baseline covariates (e.g., priority group, age, sex, 
+ethnicity).
+\end{itemize}
+
+\noindent Note that an arbitrary number of baseline covariates can be included.
+All of the time variables are measured from the start of the trial and are 
+specified in units of whole days. 
+
+\vspace{.15in}
+
+The primary analysis tool of the package is \textit{idove()}, which accommodates both interval- and right-censored infection time data. The implementation uses linear splines to approximate the log hazard ratio with respect to vaccination and, thus, is capable of estimating either the constant or the  potentially waning vaccine efficacy. Specifically, in $K$-piece linear splines, the log hazard ratio at time $t$ is given by
+
+$$\eta(t) = \gamma_1t+\gamma_2(t-x_1)_+ + \gamma_3(t-x_2)_+ +\dots + \gamma_K(t-x_{K-1})_+,$$
+
+where $x_1, \dots, x_{K-1}$ are the $K-1$ pre-specified change points, $\gamma_1, \dots, \gamma_K$ are the $K$ spline parameters, and $t_+ = t$ if $t > 0$ and 0 otherwise. The first $K-1$ spline parameters are always estimated from the data, whereas $\gamma_K$ is either estimated or given by  $\gamma_K = -\sum_{k=1}^{K-1}\gamma_k$, depending on the assumption of vaccine efficacy after the last change point $x_{K-1}$.
+
+\vspace{.15in}
+
+Function \textit{idove()} returns the estimated hazard ratio for each baseline covariate, the
+estimated vaccine efficacy in reducing the attack rate (cumulative incidence),
+the estimated vaccine efficacy in reducing the hazard rate (instantaneous risk), and the
+estimated vaccine efficacy in reducing the attack rates over successive time periods.
+
+\vspace{.15in}
+
+In addition, the package includes three convenience functions
+\textit{intCens()}, which is used to wrap all the input time variables together 
+as the response required in the model statement of \textit{idove()};
+\textit{print()}, which displays the primary results of the analysis; and
+\textit{plot()}, which generates plots of the estimated vaccine efficacies. 
+Finally, a simulated dataset is provided to illustrate the use of the software.
+
+## Functions
+
+### \textit{intCens()}
+
+This convenience function is used as the response of a formula object 
+for the sole purpose of simplifying the specification of required input variables: 
+entry time, left interval time, right interval time, and vaccination time. 
+This function is not intended to be used as a stand-alone feature.
+For completeness, the function ensures
+that the input data obey basic constraints and returns 
+the data in a predictable format for use in internal functions.
+
+\vspace{.15in}
+
+
+The usage is
+```{r eval=FALSE}
+intCens(entry_time, left_time, right_time, vaccination_time)
+```
+where \texttt{entry\_time} is the time when the participant enters the trial;
+\texttt{left\_time} is the last examination time when the test is negative;
+\texttt{right\_time} is the first examination time when the test is positive
+(NA or Inf if the participant is never tested positive during the clinical trial);
+\texttt{vaccination\_time} is the time when vaccination takes place. Note that
+all times must be provided in units of whole days.
+
+### \textit{idove()}
+
+This function is the primary tool of \textbf{iDOVE}. The value object returned contains the estimated hazard ratio for each baseline covariate, estimated vaccine efficacy in reducing the attack rate, $VE_a(t)$, and in reducing the hazard rate, $VE_h(t)$, where $t$ is time elapsed since vaccination, as well as the estimated vaccine efficacy in reducing the attack rates over $m$ successive time periods, $VE_a(0,t_1), VE_a(t_1,t_2), \ldots, VE_a(t_{m-1},t_m)$. By definition, $VE_a(0,t)=VE_a(t)$.
+
+\vspace{.15in}
+
+
+The function call takes the following form:
+
+```{r eval=FALSE}
+idove(formula, data, constantVE = FALSE, rightCens = FALSE, plots = TRUE, 
+      changePts = NULL, timePts = NULL, tol = 0.0001, maxit = 2000)
+```
+where 
+\begin{itemize}
+\item \texttt{formula} is a model statement. See below for further details. 
+\item \texttt{data} is the data.frame object containing all required data
+as previously described.
+\item \texttt{constantVE} is a logical object. If TRUE, the vaccine efficacy 
+is assumed to be constant in the period after the last change point. If
+FALSE, the VE is assumed to be potentially waning after the last change point.
+\item \texttt{rightCens} is a logical object. If TRUE, the standard Cox regression for 
+right-censored infection time data is used estimate the vaccine efficacy. If FALSE,
+the nonparametric maximum likelihood method for interval-censored infection time data is used.
+\item \texttt{plots} is a logical object indicating whether graphical forms of the estimated
+vaccine efficacy in reducing the attack rate, $VE_a(t)$, and
+in reducing the hazard rate, $VE_h(t)$, are to be generated.
+\item \texttt{changePts} is an optional integer vector to specify the change points $(x_1, \dots, x_{K-1})$ of the piece-wise log-linear hazard ratio. If no change points are provided,
+one change point will automatically be selected among Weeks 4, 5, 6, 7, 8 by AIC.
+\item \texttt{timePts} is an optional vector to specify the time points $(t_1, t_2, \ldots, t_m)$ 
+for partitioning the study period in the estimation of the attack rates over successive time periods. If not provided, 
+a default sequence $t_1, 2t_1, 3t_1, \dots $ will be used, where
+$t_1$ is the first change point. The sequence ends at the  
+maximum of the finite left and right interval times from all participants. 
+\item \texttt{tol} is the convergence threshold for the EM or Newton-Raphson algorithm. 
+\item \texttt{maxit} is the maximum number of iterations 
+for the EM or Newton-Raphson algorithm. 
+\end{itemize}
+
+\vspace{.15in}
+
+
+The model statement is a formula object. The left-hand-side is an
+object returned by the \textit{intCens()} function and specifies all
+time variables. The right-hand-side contains all baseline covariates;
+a model without baseline covariates is allowed. Note that categorical baseline 
+covariates can be specified, and if provided, 
+all other categories are compared to the first category.
+
+The \texttt{formula} input takes the following general structure
+
+```{r eval=FALSE}
+intCens(entry_time, left_time, right_time, vaccination_time) ~ covariates 
+```
+
+where 'event\_time', 'left\_time', 'right\_time', 'vaccination\_time', and 'covariates'
+are used here as place holders
+indicating the data that are to be provided; they are to be replaced by the 
+appropriate variable names in the header of the input data.
+
+\vspace{.15in}
+
+When \texttt{right\_time} - \texttt{left\_time} $\le$ 2 for all individuals whose infection times are truly interval-censored (i.e., \texttt{right\_time} is finite), the software assumes that the examinations are completed daily or every two days, and performs the standard Cox regression, regardless of the value provided through input \texttt{rightCens}. In general, we suggest placing change points at times (since vaccination) when there are sufficient probabilities of events. Also, we suggest not placing change points at the tail, otherwise the estimation on final pieces might be unstable. The two measures of vaccine efficacy, $VE_a(t)$ and $VE_h(t)$, are estimated up to the maximum of all finite left and right ends of the intervals. However, the estimates at the tail may not be reliable because there are very few participants under follow-up. To obtain reliable estimates of $VE_a$ $(t_{j-1}, t_j)$ $(j=1,\ldots, m)$, we suggest using broad time periods, such as every month or every two months.
+
+The value object returned by \textit{idove()} is an S3 object of class iDOVE
+that has additional attributes that are used by package convenience functions:
+\begin{itemize}
+\item \textbf{knots}: The knots of the linear spline.
+\item \textbf{tau}: The length of the trial in days.
+\item \textbf{gamma}: The estimated spline parameters.
+\item \textbf{covgamma}: The covariance matrix of the spline parameters.
+\end{itemize}
+
+\vspace{.15in}
+
+
+### \textit{plot()}
+
+When provided the value object returned by \textit{idove()}, this convenience function creates/recreates plots of the estimated vaccine efficacy in reducing the attack rate, $VE_a(t)$, and in reducing the hazard rate, $VE_h(t)$.
+
+### \textit{print()}
+
+When provided the value object returned by \textit{idove()}, the tabular results are displayed.
+
+## Examples
+
+To illustrate the call structure and results of \textit{idove()}, we use the 
+dataset provided with the package, idoveData. 
+This dataset was simulated under a blinded, priority-tier dependent crossover 
+design and contains the following observations for each of the 40,000 participants:
+
+\begin{itemize}
+\item \textbf{entry.time}: The entry time in days
+\item \textbf{left.time}: The left end of the time interval in days
+\item \textbf{right.time}: The right end of the time interval in days
+\item \textbf{vaccine.time}: The time of vaccination in days
+\item \textbf{priority}: A composite baseline risk score taking values 1-5
+\item \textbf{sex}: A binary indicator of sex (male/female)
+\end{itemize}
+
+\vspace{.15in}
+  
+    
+The data can be loaded in the usual way
+```{r}
+data(idoveData)
+```
+
+```{r}
+head(idoveData)
+```
+
+\vspace{.15in}
+
+Consider the summary statistics
+```{r}
+summary(idoveData)
+summary(idoveData$right.time[is.finite(idoveData$right.time)])
+```
+We can see that participants were enrolled in the study over a 4-month period 
+(0 $\le$ entry.time $\le 120$ days); that the follow-up time ended on day 315 
+(left.time and finite right.time $\le$ 315 days); 
+and that more than $75\%$ of the participants were never tested positive during 
+the follow-up (right.time = Inf indicates that a participant did not
+test positive during the course of the trial). 
+In addition, the priority (risk) score is evenly distributed 
+across participants, who are equally distributed between the two sex groups.
+In this analysis, we will include in our model statement both baseline 
+covariates, priority and sex.
+
+
+\vspace{.25in}
+
+
+In the first example, we set Week 4 as the change point and assume a potentially waning vaccine efficacy after 4 weeks. We want to estimate $VE_a$ over 0-4, 4-16, 16-28, 28-40 weeks. Note that all times must be provided in the unit of integer days. The function call takes the following form
+
+```{r fig.align='center', fig.cap='\\label{fig:idoveFigs}Plots auto-generated by \\textit{idove()}. On the left, the estimated curve of vaccine efficacy in reducing the attack rate, $VE_a(t)$ (black) and its $95\\%$ confidence intervals (green) are shown as a function of the time since vaccination. On the right, the estimated curve of vaccine efficacy in reducing the hazard rate, $VE_h(t)$ (black) and its $95\\%$ confidence intervals (green) are shown as a function of the time since vaccination.', echo=TRUE}
+model <- intCens(entry.time, left.time, right.time, vaccine.time) ~ priority + sex
+result1 <- idove(formula = model, 
+                 data = idoveData,
+                 changePts = 4*7,
+                 timePts = c(4, 16, 28, 40)*7)
+```
+
+\vspace{.15in}
+
+The function returns an S3 object of class iDOVE, which contains a list object with the following information.
+
+\vspace{.1in}
+
+\noindent \textbf{call}: The unevaluated call.
+
+```{r}
+result1$call
+```
+
+\vspace{.15in}
+
+\noindent \textbf{Covariate Effects}: The estimated (log) hazard ratio of each covariate, 
+together with the estimated standard error, the $95\%$ confidence 
+interval, and the two-sided p-value for testing no covariate effect. 
+      
+```{r}
+result1$covariates
+```
+
+When no baseline covariates are provided, this element will be NA.
+
+\vspace{.15in}
+ 
+
+      
+\noindent \textbf{Vaccine Efficacy}: Element \textbf{\$VE\_a} contains the 
+estimated vaccine efficacy in reducing 
+the attack rate at the endpoint of each time interval, together 
+with its standard error and the $95\%$ confidence interval. 
+Element \textbf{\$VE\_h} contains the 
+estimated vaccine efficacy in reducing 
+the hazard rate at the endpoint of each time interval, together 
+with its standard error and the $95\%$ confidence interval. 
+      
+```{r}
+result1$vaccine$VE_a
+result1$vaccine$VE_h
+```
+
+Element \textbf{\$VE\_period} contains the estimated vaccine efficacy in 
+reducing the attack rate over each time period, 
+its standard error, and the $95\%$ confidence interval.
+    
+```{r}
+result1$vaccine$VE_period
+```
+
+\vspace{.15in}
+
+
+
+The graphical depictions of $VE_a$ and $VE_h$ estimates are 
+generated by default by \textit{idove()} and are shown in Figure \ref{fig:idoveFigs}. This figure can be regenerated using \textit{plot()} as follows:
+
+```{r fig.show='hide', eval=FALSE}
+plot(x = result1)
+```
+
+\vspace{.15in}
+
+In the second example, we have the software use AIC to choose a change point among Weeks 4, 5, 6, 7, 8. 
+We assume a constant vaccine efficacy after the change point and thus only the constant vaccine efficacy is estimated. The function call takes the following form
+
+```{r}
+result2 <- idove(formula = model, 
+                 data = idoveData,
+                 constantVE = TRUE)
+```
+
+
+
+\vspace{.15in}
+
+
+The function returns a list object containing the following items. 
+
+\vspace{.1in}
+
+\noindent \textbf{Covariate Effects}: The estimated (log) hazard ratio of each covariate, 
+together with the estimated standard error, the $95\%$ confidence 
+interval, and the two-sided p-value for testing no covariate effect.
+      
+```{r}
+result2$covariates
+```
+
+\vspace{.15in}
+ 
+
+      
+\noindent \textbf{Vaccine Efficacy}: Element \textbf{\$VE} contains the 
+estimated constant vaccine efficacy, together 
+with its standard error and the $95\%$ confidence interval. 
+
+      
+```{r}
+result2$vaccine$VE
+```
+
+
+\noindent \textbf{References}
+
+Lin, D-Y, Gu, Y., Zeng, D., Janes, H. E., and Gilbert, P. B. (2021). 
+Evaluating Vaccine Efficacy Against SARS-CoV-2 Infection. Submitted.
