@@ -1,6 +1,6 @@
 # iDOVE
 
-iDOVE is an R package that implements the methods described in Lin et al. (2021) for estimating potentially waning vaccine efficacy against SARS-CoV-2 infection. The use of the software is documented in the file “Vignette”, and a user guide is provided in “Manual”.
+iDOVE is an R package that implements the methods described in Lin et al. (2021) for estimating potentially waning vaccine efficacy against SARS-CoV-2 infection. The use of the software is documented in the file “iDOVE_vignette.pdf”, and a user guide is provided in “iDOVE-manual.pdf”.
 
 Reference
 
