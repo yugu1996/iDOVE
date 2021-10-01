@@ -17,23 +17,24 @@
 #' data(idoveData)
 #'
 #' set.seed(1234)
-#' smp <- sample(1L:nrow(x = idoveData), size = 500L)
+#' smp <- sample(1L:nrow(x = idoveData), size = 250L)
 #' 
+#' # NOTE: This sample size is chosen for example only -- larger data sets
+#' # should be used.
+#' # See the vignette for a full analysis of the idoveData dataset
+#'
 #' # Fit the model with default settings
 #' result <- idove(formula = intCens(entry.time, left.time, right.time, vaccine.time) ~ 1, 
 #'                 data = idoveData[smp,])
 #' 
 #' print(x = result)
 #' 
+# 8/11/21: removed lines regarding additional attributes
+
 print.iDOVE <- function(x, ...) {
 
-  attr(x = x, which = "knots") <- NULL
-  attr(x = x, which = "gamma") <- NULL
-  attr(x = x, which = "covgamma") <- NULL
-  attr(x = x, which = "tau") <- NULL
+  print(x = unclass(x = x))
 
-  x <- unclass(x = x)
-
-  print(x = x)
+  return( NULL )
 
 }

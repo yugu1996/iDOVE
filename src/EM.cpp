@@ -127,6 +127,7 @@ void EM(arma::mat& w, arma::vec& beta, arma::vec& gamma, arma::vec& lambda,
     beta += temp.head(p1); 
     gamma += temp.tail(p2);
     //// end: update theta
+
     //// begin: update lambda
     i = n-1;
     S0.zeros(m); 

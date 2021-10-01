@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // BS
 arma::rowvec BS(int t, arma::ivec knots, bool constantVE);
 RcppExport SEXP _iDOVE_BS(SEXP tSEXP, SEXP knotsSEXP, SEXP constantVESEXP) {
@@ -16,46 +21,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::ivec >::type knots(knotsSEXP);
     Rcpp::traits::input_parameter< bool >::type constantVE(constantVESEXP);
     rcpp_result_gen = Rcpp::wrap(BS(t, knots, constantVE));
-    return rcpp_result_gen;
-END_RCPP
-}
-// Cox
-List Cox(arma::vec& beta, arma::vec& gamma, const arma::ivec& time, const arma::ivec& delta, const arma::mat& X, const arma::ivec& W, const arma::ivec& S, const arma::ivec& knots, bool constantVE, double threshold, int maxit);
-RcppExport SEXP _iDOVE_Cox(SEXP betaSEXP, SEXP gammaSEXP, SEXP timeSEXP, SEXP deltaSEXP, SEXP XSEXP, SEXP WSEXP, SEXP SSEXP, SEXP knotsSEXP, SEXP constantVESEXP, SEXP thresholdSEXP, SEXP maxitSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type gamma(gammaSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type delta(deltaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type W(WSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type knots(knotsSEXP);
-    Rcpp::traits::input_parameter< bool >::type constantVE(constantVESEXP);
-    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
-    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
-    rcpp_result_gen = Rcpp::wrap(Cox(beta, gamma, time, delta, X, W, S, knots, constantVE, threshold, maxit));
-    return rcpp_result_gen;
-END_RCPP
-}
-// Cox_noX
-List Cox_noX(arma::vec& gamma, const arma::ivec& time, const arma::ivec& delta, const arma::ivec& W, const arma::ivec& S, const arma::ivec& knots, bool constantVE, double threshold, int maxit);
-RcppExport SEXP _iDOVE_Cox_noX(SEXP gammaSEXP, SEXP timeSEXP, SEXP deltaSEXP, SEXP WSEXP, SEXP SSEXP, SEXP knotsSEXP, SEXP constantVESEXP, SEXP thresholdSEXP, SEXP maxitSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec& >::type gamma(gammaSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type delta(deltaSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type W(WSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type S(SSEXP);
-    Rcpp::traits::input_parameter< const arma::ivec& >::type knots(knotsSEXP);
-    Rcpp::traits::input_parameter< bool >::type constantVE(constantVESEXP);
-    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
-    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
-    rcpp_result_gen = Rcpp::wrap(Cox_noX(gamma, time, delta, W, S, knots, constantVE, threshold, maxit));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -210,8 +175,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_iDOVE_BS", (DL_FUNC) &_iDOVE_BS, 3},
-    {"_iDOVE_Cox", (DL_FUNC) &_iDOVE_Cox, 11},
-    {"_iDOVE_Cox_noX", (DL_FUNC) &_iDOVE_Cox_noX, 9},
     {"_iDOVE_EM", (DL_FUNC) &_iDOVE_EM, 15},
     {"_iDOVE_LL", (DL_FUNC) &_iDOVE_LL, 11},
     {"_iDOVE_PLL", (DL_FUNC) &_iDOVE_PLL, 15},

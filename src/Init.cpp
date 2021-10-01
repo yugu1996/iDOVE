@@ -16,9 +16,7 @@ public:
 /* Returns {n x 3} matrix, containing the element of t
    nearest the entry, left interval, and right interval times
 
-   w     inout  {n x nTime} 0/1 at this point. 1 where L==R
    L     in     {n} left interval time in days
-   R     in     {n} right interval time in days
    Rstar in     {n} right interval time in days modified to remove Inf
    W     in     {n} entry time in days
    t     in     {nTimes} time points for int
@@ -34,7 +32,6 @@ arma::imat Init(const arma::ivec& L, const arma::ivec& Rstar,
     tind(i,0) = std::count_if(t.begin(), t.end(), Less(W(i)));
     tind(i,1) = std::count_if(t.begin(), t.end(), Less(L(i)));
     tind(i,2) = std::count_if(t.begin(), t.end(), Less(Rstar(i)));
-
   }
 
   return tind;

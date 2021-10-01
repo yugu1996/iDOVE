@@ -5,35 +5,27 @@ BS <- function(t, knots, constantVE) {
     .Call('_iDOVE_BS', PACKAGE = 'iDOVE', t, knots, constantVE)
 }
 
-Cox <- function(beta, gamma, time, delta, X, W, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L, ...) {
-    .Call('_iDOVE_Cox', PACKAGE = 'iDOVE', beta, gamma, time, delta, X, W, S, knots, constantVE, threshold, maxit)
-}
-
-Cox_noX <- function(gamma, time, delta, W, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L, ...) {
-    .Call('_iDOVE_Cox_noX', PACKAGE = 'iDOVE', gamma, time, delta, W, S, knots, constantVE, threshold, maxit)
-}
-
-EM <- function(w, beta, gamma, lambda, L, R, Rstar, t, tind, X, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L, ...) {
+EM <- function(w, beta, gamma, lambda, L, R, Rstar, t, tind, X, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L) {
     invisible(.Call('_iDOVE_EM', PACKAGE = 'iDOVE', w, beta, gamma, lambda, L, R, Rstar, t, tind, X, S, knots, constantVE, threshold, maxit))
 }
 
-LL <- function(beta, gamma, lambda, L, R, t, tind, X, S, knots, constantVE, ...) {
+LL <- function(beta, gamma, lambda, L, R, t, tind, X, S, knots, constantVE) {
     .Call('_iDOVE_LL', PACKAGE = 'iDOVE', beta, gamma, lambda, L, R, t, tind, X, S, knots, constantVE)
 }
 
-PLL <- function(w, beta, gamma, lambda_init, L, R, Rstar, t, tind, X, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L, ...) {
+PLL <- function(w, beta, gamma, lambda_init, L, R, Rstar, t, tind, X, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L) {
     .Call('_iDOVE_PLL', PACKAGE = 'iDOVE', w, beta, gamma, lambda_init, L, R, Rstar, t, tind, X, S, knots, constantVE, threshold, maxit)
 }
 
-EM_noX <- function(w, gamma, lambda, L, R, Rstar, t, tind, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L, ...) {
+EM_noX <- function(w, gamma, lambda, L, R, Rstar, t, tind, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L) {
     invisible(.Call('_iDOVE_EM_noX', PACKAGE = 'iDOVE', w, gamma, lambda, L, R, Rstar, t, tind, S, knots, constantVE, threshold, maxit))
 }
 
-LL_noX <- function(gamma, lambda, L, R, t, tind, S, knots, constantVE, ...) {
+LL_noX <- function(gamma, lambda, L, R, t, tind, S, knots, constantVE) {
     .Call('_iDOVE_LL_noX', PACKAGE = 'iDOVE', gamma, lambda, L, R, t, tind, S, knots, constantVE)
 }
 
-PLL_noX <- function(w, gamma, lambda_init, L, R, Rstar, t, tind, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L, ...) {
+PLL_noX <- function(w, gamma, lambda_init, L, R, Rstar, t, tind, S, knots, constantVE, threshold = 10^(-4), maxit = 5000L) {
     .Call('_iDOVE_PLL_noX', PACKAGE = 'iDOVE', w, gamma, lambda_init, L, R, Rstar, t, tind, S, knots, constantVE, threshold, maxit)
 }
 

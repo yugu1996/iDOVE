@@ -8,7 +8,6 @@ idove(
   formula,
   data,
   constantVE = FALSE,
-  rightCens = FALSE,
   plots = TRUE,
   changePts = NULL,
   timePts = NULL,
@@ -17,27 +16,19 @@ idove(
 )
 }
 \arguments{
-\item{formula}{A formula object, with the response (all the time information)
+\item{formula}{A formula object, with all of the time variables
 on the left hand side of a '~' operator and the covariates on the right. 
-The response must be specified through the intCens() function. 
+The time variables must be specified through the intCens() function. 
 See ?intCens and Details for further information.}
 
 \item{data}{A data.frame object. The data.frame in which to interpret the
-variable names in formula. Must contain the entry time, the left interval,
-time, the right interval time, the vaccination time, and the covariates. 
+variable names in formula. Must contain the entry time, the left interval
+time, the right interval time, the vaccination time, and any covariates. 
 See Details.}
 
-\item{constantVE}{A logical object. If TRUE, VE is assumed to be constant. 
-If FALSE (default), VE is assumed to be waning. Note that constant versus 
-waning VE pertains only to the period after ramping VE.}
-
-\item{rightCens}{A logical object. If TRUE, the standard Cox model will be 
-fitted, by treating the time of first positive test as a potentially 
-right-censored event time and performing maximum partial likelihood 
-estimation. If FALSE (default), the interval-censored event time method 
-will be applied. When examinations are completed daily or every two days,
-this input is ignored and a standard Cox regression is performed. 
-See Details.}
+\item{constantVE}{A logical object. If FALSE (default), VE is assumed to be 
+potentially waning after the last change point; 
+otherwise it is assumed to be constant after the last change point.}
 
 \item{plots}{A logical object. If TRUE (default), plots of the estimated 
 VE in reducing attack rate, the estimated VE in reducing the hazard rate, 
@@ -46,28 +37,31 @@ If FALSE, plots will not be generated.}
 
 \item{changePts}{An integer vector object or NULL. The potential change
 points (in days) of the piece-wise log-linear hazard ratio. See Details 
-for further information. If NULL, AIC will be used to select one change 
-point from \{28, 35, 42, 49, 56\} (weeks 4, 5, 6, 7, 8).}
+for further information. 
+If NULL, the Akaike information criterion (AIC) will be used to select 
+one change point from \{28, 35, 42, 49, 56\} (weeks 4, 5, 6, 7, 8).}
 
 \item{timePts}{An integer vector object or NULL. The endpoints (in days) 
 of the time periods for which the VE in reducing the attack rate are to
 be estimated. The estimated VE in reducing the hazard rate at 
 these endpoints are also returned. If NULL, a default sequence 
-\eqn{t_1, 2t_1, 3t_1, \dots} will be used, where \eqn{t_1} be the first 
+\eqn{t_1, 2t_1, 3t_1, \dots} will be used, where \eqn{t_1} is the first 
 change point. The sequence ends at the maximum of the left and
 and right ends of the time intervals from all participants. This input is 
 ignored when constantVE = TRUE.}
 
-\item{tol}{A numeric scalar. The convergence threshold for the EM or 
-Newton-Raphson algorithm. The default value is 0.0001.}
+\item{tol}{A numeric scalar object. The convergence threshold for the EM algorithm. 
+The default value is 0.0001.}
 
-\item{maxit}{A positive integer. The maximum number of iterations for the 
-EM or Newton-Raphson algorithm. The default value is 2000.}
+\item{maxit}{A positive integer object. The maximum number of iterations for the 
+EM algorithm. The default value is 2000.}
 }
 \value{
 An S3 object of class iDOVE containing a list with elements
 
   \item{call}{The unevaluated call.}
+
+  \item{changePts}{The changePts of the analysis.}
 
   \item{covariates}{A matrix containing the estimated (log) hazard ratio of
     each covariate, together with the estimated standard error, the 95\%
@@ -81,23 +75,20 @@ An S3 object of class iDOVE containing a list with elements
     containing the estimate of constant VE, its standard error estimate, 
     and the 95\% confidence interval.
     If constantVE = FALSE, three matrices are returned. The first matrix 
-    named 'VE_a' contains the estimates of the VE in reducing the attack 
-    rate at all time points given in timePts, together with the 95\%
-    confidence intervals. The second matrix named 'VE_h' contains the 
-    estimates of the VE in reducing the hazard rate at timePts. 
-    The third matrix named 'VE_period' contains the estimates of VE in
-    reducing the attack rate over successive time periods according to
-    timePts, together with the 95\% confidence intervals.}
-    
-  Objects of class iDOVE have additional attributes, knots, tau, gamma, and
-    covgamma, which are included for plotting capabilities
+   named 'VE_a' contains the estimates of the VE in reducing the attack 
+   rate at all time points given in timePts, together with the 95\%
+   confidence intervals. The second matrix named 'VE_h' contains the 
+   estimates of the VE in reducing the hazard rate at timePts. 
+   The third matrix named 'VE_period' contains the estimates of VE in
+   reducing the attack rate over successive time periods according to
+   timePts, together with the 95\% confidence intervals.}
 }
 \description{
 Assesses potentially time-varying vaccine efficacy (VE) against SARS-CoV-2 
 infection under staggered enrollment and time-varying community transmission, 
 allowing crossover of placebo volunteers to the vaccine arm. The infection 
-time data can be either interval- or right-censored, with the latter being 
-a special case of the former.
+time data are interval-censored, and the log hazard ratio is assumed to be 
+a piece-wise linear function of time.
 }
 \details{
 The information required for an analysis is 
@@ -118,51 +109,40 @@ The information required for an analysis is
    
 The covariates can include categorical variables, for which
 all other categories are compared to the first category.
+A model without covariates is also allowed.
 
-Note that all the time variables are measured from the start of the 
+Note that all of the time variables are measured from the start of the 
 clinical trial and are specified in whole units of days. Though they
 need not be provided as integer, all non-NA and finite values must be able 
 to be cast as integers without loss of information. For each 
-individual, the entry_time, left_time, and right_time satisfy
-entry_time \eqn{\le} left_time \eqn{\le} right_time. 
+individual, the entry_time and left_time should satisfy
+entry_time \eqn{\le} left_time. For each individual that tests positive, 
+entry_time \eqn{\le} left_time \eqn{\le} right_time. For each individual 
+that is vaccinated, entry_time \eqn{\le} vaccination_time.
 
 The general structure of the formula input is
   \preformatted{
   intCens(entry_time, left_time, right_time, vaccination_time) ~ covariates 
   }
 
-The response variable contains all of the time information. It must be
+The left-hand side contains all of the time information. It must be
 specified through function 'intCens()'. Specifically, 
 \preformatted{intCens(entry_time, left_time, right_time, vaccination_time)}
 If entry_time > left_time, or left_time > right_time, the case will be 
-removed from the analysis and a message will be generated.  
+removed from the analysis and a message will be generated. 
 
-When right_time - left_time \eqn{\le} 2 for all individuals whose infection 
-times are truly interval-censored (i.e., right_time is finite and less than
-the end of the trial), idove() assumes that examinations are completed
-daily or every two days and performs a standard Cox regression, regardless
-of the value specified for input rightCens. 
-
-The log hazard ratio with respect to vaccination, denoted by \eqn{\eta(t)}, 
-is approximated by linear splines. Specifically, in \eqn{K}-piece linear 
-splines,
-\deqn{\eta(t) = \gamma_1t+\gamma_2(t-t_1)_+ + \gamma_3(t-t_2)_+ +\dots + \gamma_K(t-t_{K-1})_+,}
-where \eqn{t_1, \dots, t_{K-1}} are the \eqn{K-1} pre-specified change points 
-and \eqn{\gamma_1, \dots, \gamma_K} are the \eqn{K} spline parameters. 
-The first \eqn{K-1} spline parameters are always estimated from the data, 
-whereas the treatment of the last parameter \eqn{\gamma_K} depends on the 
-value of input constantVE.
-If constantVE = TRUE, the slope of the last piece is assumed to be zero, 
-that is, \eqn{\gamma_K = -\sum_{k=1}^{K-1}\gamma_k}. Thus, \eqn{\gamma_K} is 
-a redundant parameter and is not estimated. If constantVE = FALSE, the slope 
-of the last piece can be nonzero and \eqn{\gamma_K} is also estimated from 
-the data.
+The special case of right-censored data is implemented by dove2() in the 
+  DOVE package available through CRAN.
 }
 \examples{
 data(idoveData)
 
 set.seed(1234)
-smp <- sample(1L:nrow(x = idoveData), size = 500L)
+smp <- sample(1L:nrow(x = idoveData), size = 250L)
+
+# NOTE: This sample size is chosen for example only -- larger data sets
+# should be used.
+# See the vignette for a full analysis of the idoveData dataset
 
 # Fit the model with default settings
 idove(formula = intCens(entry.time, left.time, right.time, vaccine.time) ~ 1, 
@@ -185,5 +165,6 @@ idove(formula = intCens(entry.time, left.time, right.time, vaccine.time) ~ 1,
 }
 \references{
 Lin, D-Y, Gu, Y., Zeng, D., Janes, H. E., and Gilbert, P. B. (2021). 
-  Evaluating Vaccine Efficacy Against SARS-CoV-2 Infection. Submitted.
+  Evaluating Vaccine Efficacy Against SARS-CoV-2 Infection.
+  Clinical Infectious Diseases, ciab630, https://doi.org/10.1093/cid/ciab630
 }

@@ -8,17 +8,26 @@ intCens(entry_time, left_time, right_time, vaccination_time)
 }
 \arguments{
 \item{entry_time}{The variable for the time when 
-the participant enters the trial.}
+the participant enters the trial. Entry times must be integer
+(or be able to be cast as integer without loss of information),
+non-negative, and complete.}
 
 \item{left_time}{The variable for the last examination time when
-the test is negative}
+the test is negative. Left interval times must be integer
+(or be able to be cast as integer without loss of information),
+non-negative, and complete.}
 
 \item{right_time}{The variable for the first examination time when
-the test is positive; Inf or NA if the participant is never tested
-positive during the follow-up}
+the test is positive. Right interval times must be integer
+(or be able to be cast as integer without loss of information),
+non-negative, and NA or Inf should be used if the participant never 
+tested positive during the trial.}
 
 \item{vaccination_time}{The variable for the time when 
-vaccination takes place.}
+vaccination takes place. Vaccination times must be integer
+(or be able to be cast as integer without loss of information),
+non-negative, and NA or Inf should be used if the participant was not 
+vaccinated during the trial.}
 }
 \value{
 This function is intended to be used only in the model statement 
@@ -26,5 +35,15 @@ This function is intended to be used only in the model statement
 }
 \description{
 This function is used in the model statement of idove() to specify
- the entry time, left interval time, right interval time, and vaccination time.
+ the entry time, left interval time, right interval time, and vaccination 
+ time.
+}
+\details{
+Times must obey the following relationships:
+ (i) For all participants, entry_time <= left_time;
+ (ii) For all participants that tested positive during the trial,
+ entry_time <= left_time <= right_time; and 
+ (iii) For all participants that received vaccination,
+ entry_time <= vaccination_time. If a case is found to violate one or more
+ of these relationships, its entry_time is set to NA.
 }

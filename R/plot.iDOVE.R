@@ -17,8 +17,12 @@
 #' data(idoveData)
 #'
 #' set.seed(1234)
-#' smp <- sample(1L:nrow(x = idoveData), size = 500L)
+#' smp <- sample(1L:nrow(x = idoveData), size = 250L)
 #' 
+#' # NOTE: This sample size is chosen for example only -- larger data sets
+#' # should be used.
+#' # See the vignette for a full analysis of the idoveData dataset
+#'
 #' # Fit the model with default settings
 #' result <- idove(formula = intCens(entry.time, left.time, right.time, vaccine.time) ~ 1, 
 #'                 data = idoveData[smp,])
@@ -30,10 +34,12 @@
 #' @importFrom graphics plot
 #'
 plot.iDOVE <- function(x, ...) {
+  
+  # 8/11/21: replace the original arguments of knots, gamma, covgamma, and tau
+  # to VE_a and VE_h.
 
-  .VEplot(knots = attr(x = x, which = "knots"),
-          tau = attr(x = x, which = "tau"),
-          gamma = attr(x = x, which = "gamma"),
-          covgamma = attr(x = x, which = "covgamma"))
+  .VEplot(VE_a = x$vaccine$VE_a, VE_h = x$vaccine$VE_h)
+
+  return( NULL )
 
 }

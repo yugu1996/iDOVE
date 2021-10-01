@@ -17,7 +17,7 @@ using namespace Rcpp;
   t       in    {nTimes} time points
   tind    in    {n x 3} indices for time nearest entry, left, and right times
   S       in    {n} Vaccination time
-  knots   in    {nKnots} knots for B-spline
+  knots in  {nknots} knots for B-spline
   constantVE in {1} indicator if slope of last spline is zero
   threshold in  {1} value below which algorithm is deemed to have converged
   maxit   in    {1} maximum number of iterations to consider
@@ -31,7 +31,6 @@ void EM_noX(arma::mat& w, arma::vec& gamma, arma::vec& lambda,
             double threshold=10^(-4), int maxit=5000) {
 
   int n = L.n_elem, m = t.n_elem, p2 = gamma.n_elem;
-  int k;
   double s, exps, exbeta, dif = 1.0;
   arma::vec gamma0, lambda0, temp, U, Uvec, bvec; 
   arma::rowvec Sw, S0, tmpe;
@@ -170,7 +169,7 @@ void EM_noX(arma::mat& w, arma::vec& gamma, arma::vec& lambda,
   t       in    {nTimes} time points
   tind    in    {n x 3} indices for time nearest entry, left, and right times
   S       in    {n} Vaccination time
-  knots   in    {nKnots} knots for B-spline
+  knots   in    {nknots} knots for B-spline
   constantVE in {1} indicator if slope of last spline is zero
 */
 
@@ -232,7 +231,7 @@ arma::vec LL_noX(const arma::vec& gamma,
   t       in    {nTimes} time points
   tind    in    {n x 3} indices for time nearest entry, left, and right times
   S       in    {n} Vaccination time
-  knots   in    {nKnots} knots for B-spline
+  knots   in    {nknots} knots for B-spline
   constantVE in {1} indicator if slope of last spline is zero
   threshold in  {1} value below which algorithm is deemed to have converged
   maxit   in    {1} maximum number of iterations to consider

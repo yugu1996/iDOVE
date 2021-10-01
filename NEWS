@@ -1,3 +1,18 @@
+iDOVE v1.3 (Release date: 2021-09-14)
+==============
+
+Changes:
+
+* Remove the right-censored part and revise the documentation
+* Allow vaccination time to be NA or Inf if a participant is not vaccinated 
+  during the clinical trial
+* Use daily VE estimates in reducing the attack rate and in reducing the hazard rate
+  to generate the plots
+* Change the input of function .VEplot() to be VE_a and VE_h, which are directly calculated 
+  within function .postProcess()
+* Remove the additional attributes knots, gamma, covgamma, and tau
+* Moved testing of inputs to individual function
+
 iDOVE v1.2 (Release date: 2021-06-17)
 ==============
 
